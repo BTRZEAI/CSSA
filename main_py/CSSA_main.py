@@ -2,6 +2,7 @@ import io
 import requests
 import PyPDF2
 import datetime
+import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # Load the pre-trained tokenizer and model
@@ -53,7 +54,7 @@ def get_sentiment_logits_for_all_files_in_github_repo(owner, repo, path):
 
 
 # Example usage
-logits_dict = get_sentiment_logits_for_all_files_in_github_repo('BTRZEAI', 'CSSA', 'pdf')
+logits_dict = get_sentiment_logits_for_all_files_in_github_repo('BTRZEAI', 'CSSA', 'lib\pdf_files')
 
 # Print the logits for each PDF file
 for filename, logits in logits_dict.items():
