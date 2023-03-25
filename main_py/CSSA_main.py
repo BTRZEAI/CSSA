@@ -1,8 +1,8 @@
 import io
+import os
 import requests
 import PyPDF2
 import datetime
-import torch
 from transformers import AutoTokenizer, AutoModelForSequenceClassification
 
 # Load the pre-trained tokenizer and model
@@ -38,27 +38,26 @@ def get_sentiment_logits_for_all_files_in_github_repo(owner, repo, path):
     api_url = f'https://api.github.com/repos/{owner}/{repo}/contents/{path}'
     response = requests.get(api_url)
     contents = response.json()
-    logits_dicti = {}
-    for file in contents:
-        if file['type'] == 'file' and file['name'].endswith('.pdf'):
-            url = file['download_url']
+    logits_dict = {}
+    for content in contents:
+        if content['type'] == 'file' and content['name'].endswith('.pdf'):
+            url = content['download_url']
             text = extract_text_from_pdf(url)
             logits_sen = get_sentiment_logits(text)
             # Extract the date from the filename and create a datetime object
-            date_str = file['name'][:8]
+            date_str = content['name'][:8]
             date = datetime.datetime.strptime(date_str, '%Y%m%d')
             # Add a new key to the logits dictionary with the date as the value
-            logits_dicti[file['name']] = {'date': date.date(), 'logits': logits_sen}
+            logits_dict[content['name']] = {'date': date.date(), 'logits': logits_sen}
 
-    return logits_dicti
+    return logits_dict
 
+# Usage
+stocks = ['ABEV3', 'ALPA4', 'AMER3']
+#, 'ASAI3', 'AZUL4', 'B3SA3', 'BBAS3', 'BBDC3', 'BBDC4', 'BBSE3', 'BEEF3', 'BIDI11', 'BPAC11', 'BPAN4', 'BRFS3', 'BRKM5', 'BRML3', 'CASH3', 'CCRO3', 'CIEL3', 'CMIG4', 'CMIN3', 'COGN3', 'CPFE3', 'CPLE6', 'CRFB3', 'CSAN3', 'CSNA3', 'CVCB3', 'CYRE3', 'DXCO3', 'ECOR3', 'EGIE3', 'ELET3', 'EMBR3', 'ENBR3', 'ENEV3', 'ENGI11', 'EQTL3', 'EZTC3', 'FLRY3', 'GGBR4', 'GOAU4', 'GOLL4', 'HAPV3', 'HYPE3', 'IGTI11', 'IRBR3', 'ITSA4', 'ITUB4', 'JBSS3', 'JHSF3', 'KLBN11', 'LCAM3', 'LREN3', 'LWSA3', 'MGLU3', 'MRFG3', 'MRVE3', 'MULT3', 'NTCO3', 'PCAR3', 'PETR3', 'PETR4', 'PETZ3', 'POSI3', 'PRIO3', 'QUAL3', 'RADL3', 'RAIL3', 'RDOR3', 'RENT3', 'RRRP3', 'SANB11', 'SBSP3', 'SLCE3', 'SOMA3', 'SULA11', 'SUZB3', 'TAEE11', 'TIMS3', 'TOTS3', 'UGPA3', 'USIM5', 'VALE3', 'VBBR3', 'VIIA3', 'VIVT3', 'WEGE3', 'YDUQ3']
 
-# Example usage
-logits_dict = get_sentiment_logits_for_all_files_in_github_repo('BTRZEAI', 'CSSA', 'lib\pdf_files')
+logits_dict = {symbol: get_sentiment_logits_for_all_files_in_github_repo('BTRZEAI', 'CSSA', f'main_py/lib/pdf_files/{symbol}') for symbol in stocks}
 
-# Print the logits for each PDF file
-for filename, logits in logits_dict.items():
-    print(f"{filename}:")
-    for label, logit in zip(labels, logits):
-        print(f"{label}: {logit}")
-    print()
+for symbol, logits in logits_dict.items():
+    print(f"Number of PDF files processed for {symbol}: {len(logits)}")
+
